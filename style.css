@@ -1,0 +1,160 @@
+/* RESET GERAL (Remove bordas brancas do navegador) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Impede barras de rolagem */
+    background-color: #000; /* Fundo preto caso o canvas demore a carregar */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* O CANVAS OCUPA A TELA TODA */
+canvas {
+    display: block; /* Remove espaço extra em baixo do canvas */
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1; /* Fica atrás de tudo */
+}
+
+/* UI DE JOGO (HUD) */
+#ui-game {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10; /* Fica na frente do canvas */
+    color: white;
+    background: rgba(0, 0, 0, 0.5); /* Fundo semitransparente */
+    padding: 15px;
+    border-radius: 8px;
+    pointer-events: none; /* Permite clicar "através" da UI se necessário */
+    backdrop-filter: blur(2px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+#ui-game label {
+    pointer-events: auto; /* Permite clicar no checkbox */
+    cursor: pointer;
+}
+
+/* MENU PRINCIPAL (OVERLAY) */
+#main-menu {
+    position: absolute; /* O PULO DO GATO: Flutua sobre o canvas */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20; /* Fica na frente de tudo */
+    
+    /* Centraliza o conteúdo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Fundo Azul Escuro Transparente (Estilo Mar Noturno) */
+    background: rgba(5, 10, 20, 0.6); 
+    backdrop-filter: blur(4px); /* Desfoca o jogo atrás */
+}
+
+/* CAIXA DO MENU */
+.menu-content {
+    text-align: center;
+    background: rgba(0, 0, 0, 0.7); /* Caixa preta transparente */
+    padding: 50px;
+    border-radius: 2px;
+    border: 1px solid rgba(100, 200, 255, 0.3); /* Borda azul neon suave */
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    min-width: 400px;
+}
+
+h1 {
+    color: white;
+    font-size: 3rem;
+    margin-bottom: 10px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    text-shadow: 0 0 15px rgba(0, 150, 255, 0.8);
+}
+
+.subtitle {
+    color: #ccc;
+    margin-bottom: 40px;
+    font-style: italic;
+    font-size: 1.1rem;
+}
+
+/* BOTÕES ESTILIZADOS */
+button {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin: 15px 0;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: rgba(0, 150, 255, 0.2);
+    border-color: #00aaff;
+    letter-spacing: 2px; /* Efeito de expandir texto */
+    box-shadow: 0 0 15px rgba(0, 150, 255, 0.4);
+}
+
+/* MODAL DE HISTÓRIA (LORE) */
+.modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9); /* Quase preto total para leitura */
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #eee;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal h2 {
+    font-size: 2.5rem;
+    color: #00aaff;
+    margin-bottom: 30px;
+}
+
+.modal p {
+    max-width: 700px;
+    font-size: 1.2rem;
+    line-height: 1.8;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #ccc;
+}
+
+.btn-close {
+    width: 200px;
+    margin-top: 40px;
+    border-color: #ff5555;
+    color: #ffaaaa;
+}
+
+.btn-close:hover {
+    background: rgba(255, 0, 0, 0.2);
+    border-color: red;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+}

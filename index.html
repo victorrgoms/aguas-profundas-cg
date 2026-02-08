@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trabalho CG - Passeio Virtual</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="glcanvas"></canvas>
+
+    <div id="ui-game" style="display: none;">
+        <h3>Controles</h3>
+        <p><strong>WASD</strong>: Mover-se</p>
+        <p><strong>Mouse</strong>: Olhar ao redor</p>
+        <p><strong>ESC</strong>: Pausar / Menu</p>
+        <br>
+        <label><input type="checkbox" id="cullFace" checked> Otimização (Cull Face)</label>
+    </div>
+
+    <div id="main-menu">
+        <div class="menu-content">
+            <h1>ÁGUAS PROFUNDAS</h1>
+            
+            <button id="btn-start">INICIAR JORNADA</button>
+            <button id="btn-lore">CONTEXTO (LORE)</button>
+            <button onclick="alert('Desenvolvido por Victor Gomes')">CRÉDITOS</button>
+        </div>
+    </div>
+
+    <div id="lore-modal" class="modal hidden">
+        <h2>O Grande Azul</h2>
+        <p>O mundo foi inundado. As cidades antigas agora são apenas destroços no fundo do oceano.</p>
+        <p>Você é um sobrevivente solitário em uma jangada improvisada.</p>
+        <p>Guiado apenas por sua tocha, você navega pelo infinito em busca de terra firme.</p>
+        <button class="btn-close" onclick="document.getElementById('lore-modal').classList.add('hidden')">VOLTAR</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
+    
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>
