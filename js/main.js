@@ -181,15 +181,27 @@ function init() {
 
     // REQUISITO ESPECÍFICO II: Controle de Câmera (Pointer Lock API)
    // Eventos de Menu
+    // Eventos de Menu
     btnStart.addEventListener('click', () => { 
+        // Tenta travar o mouse (PC)
         canvas.requestPointerLock();
         
         // Toca o som do mar quando o jogo começa
         audioAmbient.play().catch(e => console.log("Erro ao tocar áudio:", e));
         
         // Toca o som de clique
-        audioClick.currentTime = 0; // Reinicia o som se já estiver tocando
+        audioClick.currentTime = 0; 
         audioClick.play();
+
+        // --- CORREÇÃO PARA CELULAR (Força o início) ---
+        setTimeout(() => {
+            if (document.pointerLockElement !== canvas) {
+                // Se não travou o mouse (é celular), inicia mesmo assim
+                gameState = "PLAYING";
+                mainMenu.style.display = 'none';
+                uiGame.style.display = 'block';
+            }
+        }, 100);
     });
 
     // Opcional: Som nos outros botões
@@ -228,6 +240,43 @@ function init() {
     // Teclado
     window.addEventListener('keydown', (e) => keys[e.code] = true);
     window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+    // ... (logo abaixo de window.addEventListener('keyup'... )
+
+    // --- CONTROLE DE TOQUE (PARA CELULAR) ---
+    let lastTouchX = 0;
+    let lastTouchY = 0;
+
+    canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) {
+            lastTouchX = e.touches[0].pageX;
+            lastTouchY = e.touches[0].pageY;
+        }
+    }, {passive: false});
+
+    canvas.addEventListener('touchmove', (e) => {
+        if (gameState === "PLAYING" && e.touches.length > 0) {
+            // Evita que a tela role para baixo
+            e.preventDefault();
+
+            const touchX = e.touches[0].pageX;
+            const touchY = e.touches[0].pageY;
+
+            const deltaX = touchX - lastTouchX;
+            const deltaY = touchY - lastTouchY;
+
+            // Ajusta a sensibilidade (0.2 fica bom no celular)
+            yaw += deltaX * 0.4;
+            pitch -= deltaY * 0.4;
+
+            // Trava para não quebrar o pescoço
+            if (pitch > 89.0) pitch = 89.0; 
+            if (pitch < -89.0) pitch = -89.0;
+
+            lastTouchX = touchX;
+            lastTouchY = touchY;
+        }
+    }, {passive: false});
 
     cullFaceCheckbox = document.getElementById('cullFace');
 
