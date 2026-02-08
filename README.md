@@ -11,6 +11,13 @@ Este projeto é uma aplicação gráfica 3D interativa desenvolvida como parte d
 > [https://youtu.be/8jNNM8hCD8E](https://youtu.be/8jNNM8hCD8E)
 
 ---
+---
+
+## 📺 Link Slides
+**Slides no drive:**
+> [https://docs.google.com/presentation/d/1vRzHRAz5WHDOogo1TK9Er2VYQHbb8a1BkWFjfS8GMzY/edit?usp=drive_link](https://docs.google.com/presentation/d/1vRzHRAz5WHDOogo1TK9Er2VYQHbb8a1BkWFjfS8GMzY/edit?usp=drive_link)
+
+---
 
 ## 🎮 Descrição e Lore
 
