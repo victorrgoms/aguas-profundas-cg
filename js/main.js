@@ -13,7 +13,6 @@ let cubeVAO, skyboxVAO, waterVAO, sailClothVAO, birdVAO;
 let boxTexture, woodFloorTexture, skyboxTexture, sailTexture;
 
 // --- ÁUDIO ---
-// O iPhone prefere carregar o áudio apenas no clique, mas vamos instanciar aqui.
 const audioAmbient = new Audio('./assets/sounds/ocean.wav');
 const audioClick = new Audio('./assets/sounds/click.wav');
 
@@ -88,14 +87,15 @@ function createShape(gl, data) {
     return vao;
 }
 
-// --- CONTROLES DE TOQUE (CELULAR) ---
+// --- CONTROLES DE TOQUE ---
 let touchStartX = 0;
 let touchStartY = 0;
 let isTwoFingerTouch = false;
 
-// Helper para detectar celular
+// Helper melhorado para detectar iPhone/iPad
 function isMobile() {
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || 
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
 function init() {
@@ -113,52 +113,46 @@ function init() {
     const btnLore = document.getElementById('btn-lore');
     const loreModal = document.getElementById('lore-modal');
 
-    // === FUNÇÃO DE INÍCIO DO JOGO (ESPECIAL PARA IPHONE) ===
+    // === INÍCIO DO JOGO FORÇADO (FORCE START) ===
     const startGame = () => {
-        // 1. Toca o som (Tem que ser a primeira coisa no iPhone)
-        // Usamos catch vazio para o jogo não travar se o audio falhar
+        // 1. Áudio
         audioClick.play().catch(() => {});
         audioAmbient.play().catch(() => {});
 
-        // 2. Se for celular, ESCONDE O MENU IMEDIATAMENTE
-        // O iPhone não espera o "Pointer Lock", então forçamos a troca de tela agora.
-        if (isMobile()) {
-            gameState = "PLAYING";
-            mainMenu.style.display = 'none';
-            uiGame.style.display = 'block';
-        } else {
-            // Se for PC, tenta travar o mouse (padrão)
-            try {
-                canvas.requestPointerLock();
-            } catch (e) {
-                // Fallback para PC caso falhe
-                gameState = "PLAYING";
-                mainMenu.style.display = 'none';
-                uiGame.style.display = 'block';
-            }
-        }
+        // 2. Tenta travar mouse (PC), mas ignora se falhar
+        try {
+            canvas.requestPointerLock();
+        } catch (e) {}
+
+        // 3. MUDA O ESTADO IMEDIATAMENTE (Não espera nada)
+        // Isso garante que o iPhone entre no jogo mesmo sem travar o mouse
+        gameState = "PLAYING";
+        mainMenu.style.display = 'none';
+        uiGame.style.display = 'block';
     };
 
-    // Eventos de Clique e Toque
+    // Eventos (Touch e Click para garantir)
     btnStart.addEventListener('click', startGame);
-    btnStart.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // Impede clique duplo fantasma
+    btnStart.addEventListener('touchend', (e) => {
+        e.preventDefault(); // Evita comportamento duplo
         startGame();
-    }, {passive: false});
+    });
 
     btnLore.addEventListener('click', () => { 
         loreModal.classList.remove('hidden'); 
         audioClick.play().catch(()=>{});
     });
     
-    // Detector de Pause/Menu (Apenas PC)
+    // Detector de Pause/Menu (SOMENTE SE NÃO FOR CELULAR)
     document.addEventListener('pointerlockchange', () => {
+        // Se travou o mouse, joga
         if (document.pointerLockElement === canvas) {
             gameState = "PLAYING";
             mainMenu.style.display = 'none';
             uiGame.style.display = 'block';
         } else {
-            // Só pausa se NÃO for celular. No celular o pointerlockchange nunca dispara ou dispara errado.
+            // Se soltou o mouse, SÓ VOLTA PRO MENU SE FOR PC.
+            // No celular, como nunca trava o mouse, se deixarmos isso ele volta pro menu na hora.
             if (!isMobile()) {
                 gameState = "MENU";
                 mainMenu.style.display = 'flex';
@@ -179,7 +173,7 @@ function init() {
         }
     });
 
-    // 2. Toque (Celular)
+    // 2. Toque (Celular) - Arraste para olhar
     canvas.addEventListener('touchstart', (e) => {
         if(e.touches.length === 1) {
             touchStartX = e.touches[0].pageX;
@@ -195,8 +189,10 @@ function init() {
     });
 
     canvas.addEventListener('touchmove', (e) => {
+        // Se estiver jogando, permite mover a câmera
         if (gameState === "PLAYING" && e.touches.length === 1) {
-            e.preventDefault(); 
+            e.preventDefault(); // Impede scroll da tela
+            
             const dx = e.touches[0].pageX - touchStartX;
             const dy = e.touches[0].pageY - touchStartY;
             
@@ -217,12 +213,10 @@ function init() {
 
     cullFaceCheckbox = document.getElementById('cullFace');
 
-    // Compilação Shaders
     program = createProgram(gl, createShader(gl, gl.VERTEX_SHADER, vsSource), createShader(gl, gl.FRAGMENT_SHADER, fsSource));
     skyboxProgram = createProgram(gl, createShader(gl, gl.VERTEX_SHADER, skyboxVsSource), createShader(gl, gl.FRAGMENT_SHADER, skyboxFsSource));
     waterProgram = createProgram(gl, createShader(gl, gl.VERTEX_SHADER, waterVsSource), createShader(gl, gl.FRAGMENT_SHADER, waterFsSource));
 
-    // Shapes
     cubeVAO = createShape(gl, cubeData);
     waterVAO = createShape(gl, createWaterGrid(800, 800, 300));
     sailClothVAO = createShape(gl, createWaterGrid(3.0, 2.5, 20));
@@ -234,7 +228,6 @@ function init() {
     gl.bufferData(gl.ARRAY_BUFFER, skyboxData, gl.STATIC_DRAW);
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(0);
 
-    // Texturas
     boxTexture = loadTexture(gl, 'assets/texturas/box.jpg');
     woodFloorTexture = loadTexture(gl, 'assets/texturas/box.jpg'); 
     skyboxTexture = loadCubemap(gl, 'assets/skybox/');
