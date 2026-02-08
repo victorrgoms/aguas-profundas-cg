@@ -1,4 +1,4 @@
-# 🌊 Águas Profundas (Deep Waters)
+# 🌊 Águas Profundas (Deep Waters)   
 
 > **Passeio Virtual 3D desenvolvido em WebGL puro.**
 
@@ -103,4 +103,4 @@ Se você tem Node.js instalado:
 ## 👨‍💻 Créditos
 
 Desenvolvido por **Victor Gomes**.
-Biblioteca auxiliar utilizada para Álgebra Linear: [gl-matrix](https://glmatrix.net/).
+Biblioteca auxiliar utilizada para Álgebra Linear: [gl-matrix](https://glmatrix.net/).  
