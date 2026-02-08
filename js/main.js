@@ -12,8 +12,8 @@ let program, skyboxProgram, waterProgram;
 let cubeVAO, skyboxVAO, waterVAO, sailClothVAO, birdVAO;
 let boxTexture, woodFloorTexture, skyboxTexture, sailTexture;
 
-// --- ÁUDIO (Com tratamento de erro para mobile) ---
-// Tenta carregar .wav, se não der, tente .mp3 renomeando no código se precisar
+// --- ÁUDIO ---
+// O iPhone prefere carregar o áudio apenas no clique, mas vamos instanciar aqui.
 const audioAmbient = new Audio('./assets/sounds/ocean.wav');
 const audioClick = new Audio('./assets/sounds/click.wav');
 
@@ -61,7 +61,7 @@ const torchColor = vec3.fromValues(1.0, 0.8, 0.4);
 let moveRight = vec3.create();
 let torchPosWorld = vec3.create();
 
-// GEOMETRIA (Vértices)
+// GEOMETRIA
 const skyboxData = new Float32Array([ -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, 1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1, 1, -1, 1, -1, 1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, 1, -1, 1 ]);
 
 const cubeData = new Float32Array([ -0.5, -0.5, 0.5, 0,0,1, 0,0,  0.5, -0.5, 0.5, 0,0,1, 1,0,  0.5, 0.5, 0.5, 0,0,1, 1,1, 0.5, 0.5, 0.5, 0,0,1, 1,1,  -0.5, 0.5, 0.5, 0,0,1, 0,1,  -0.5, -0.5, 0.5, 0,0,1, 0,0, -0.5, -0.5, -0.5, 0,0,-1, 0,0,  -0.5, 0.5, -0.5, 0,0,-1, 0,1,  0.5, 0.5, -0.5, 0,0,-1, 1,1, 0.5, 0.5, -0.5, 0,0,-1, 1,1,  0.5, -0.5, -0.5, 0,0,-1, 1,0,  -0.5, -0.5, -0.5, 0,0,-1, 0,0, -0.5, 0.5, 0.5, -1,0,0, 1,0,  -0.5, 0.5, -0.5, -1,0,0, 1,1,  -0.5, -0.5, -0.5, -1,0,0, 0,1, -0.5, -0.5, -0.5, -1,0,0, 0,1,  -0.5, -0.5, 0.5, -1,0,0, 0,0,  -0.5, 0.5, 0.5, -1,0,0, 1,0, 0.5, 0.5, 0.5, 1,0,0, 1,0,  0.5, -0.5, -0.5, 1,0,0, 0,1,  0.5, 0.5, -0.5, 1,0,0, 1,1, 0.5, -0.5, -0.5, 1,0,0, 0,1,  0.5, 0.5, 0.5, 1,0,0, 1,0,  0.5, -0.5, 0.5, 1,0,0, 0,0, -0.5, 0.5, -0.5, 0,1,0, 0,1,  -0.5, 0.5, 0.5, 0,1,0, 0,0,  0.5, 0.5, 0.5, 0,1,0, 1,0, 0.5, 0.5, 0.5, 0,1,0, 1,0,  0.5, 0.5, -0.5, 0,1,0, 1,1,  -0.5, 0.5, -0.5, 0,1,0, 0,1, -0.5, -0.5, -0.5, 0,-1,0, 0,1,  0.5, -0.5, -0.5, 0,-1,0, 1,1,  0.5, -0.5, 0.5, 0,-1,0, 1,0, 0.5, -0.5, 0.5, 0,-1,0, 1,0,  -0.5, -0.5, 0.5, 0,-1,0, 0,0,  -0.5, -0.5, -0.5, 0,-1,0, 0,1 ]);
@@ -91,7 +91,12 @@ function createShape(gl, data) {
 // --- CONTROLES DE TOQUE (CELULAR) ---
 let touchStartX = 0;
 let touchStartY = 0;
-let isTwoFingerTouch = false; // Para andar automático
+let isTwoFingerTouch = false;
+
+// Helper para detectar celular
+function isMobile() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
 
 function init() {
     canvas = document.getElementById("glcanvas");
@@ -108,49 +113,53 @@ function init() {
     const btnLore = document.getElementById('btn-lore');
     const loreModal = document.getElementById('lore-modal');
 
-    // === FUNÇÃO DE INÍCIO DO JOGO (ROBUSTA) ===
+    // === FUNÇÃO DE INÍCIO DO JOGO (ESPECIAL PARA IPHONE) ===
     const startGame = () => {
-        // 1. Toca o som (Interação do usuário permite isso)
-        audioClick.play().catch(e => {});
-        audioAmbient.play().catch(e => console.log("Erro audio:", e));
+        // 1. Toca o som (Tem que ser a primeira coisa no iPhone)
+        // Usamos catch vazio para o jogo não travar se o audio falhar
+        audioClick.play().catch(() => {});
+        audioAmbient.play().catch(() => {});
 
-        // 2. Tenta travar o mouse (Pode falhar no celular)
-        try {
-            canvas.requestPointerLock();
-        } catch (e) {
-            console.log("Pointer lock não suportado ou bloqueado (normal em mobile)");
-        }
-
-        // 3. FORÇA O INÍCIO DO JOGO (Mesmo se o mouse não travar)
-        setTimeout(() => {
+        // 2. Se for celular, ESCONDE O MENU IMEDIATAMENTE
+        // O iPhone não espera o "Pointer Lock", então forçamos a troca de tela agora.
+        if (isMobile()) {
             gameState = "PLAYING";
             mainMenu.style.display = 'none';
             uiGame.style.display = 'block';
-        }, 100); // Espera 100ms e força a entrada
+        } else {
+            // Se for PC, tenta travar o mouse (padrão)
+            try {
+                canvas.requestPointerLock();
+            } catch (e) {
+                // Fallback para PC caso falhe
+                gameState = "PLAYING";
+                mainMenu.style.display = 'none';
+                uiGame.style.display = 'block';
+            }
+        }
     };
 
+    // Eventos de Clique e Toque
     btnStart.addEventListener('click', startGame);
-    // Adiciona suporte a toque no botão também, pra garantir
     btnStart.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // Evita clique duplo
+        e.preventDefault(); // Impede clique duplo fantasma
         startGame();
     }, {passive: false});
 
     btnLore.addEventListener('click', () => { 
         loreModal.classList.remove('hidden'); 
-        audioClick.play().catch(e=>{});
+        audioClick.play().catch(()=>{});
     });
     
-    // Detector de Pause/Menu (PC)
+    // Detector de Pause/Menu (Apenas PC)
     document.addEventListener('pointerlockchange', () => {
         if (document.pointerLockElement === canvas) {
             gameState = "PLAYING";
             mainMenu.style.display = 'none';
             uiGame.style.display = 'block';
         } else {
-            // Se saiu do PointerLock, só pausa se não for Mobile (no mobile nunca entra em pointerlock)
-            // Lógica simplificada: Se estava jogando e soltou, pausa.
-            if(gameState === "PLAYING" && !isMobile()) {
+            // Só pausa se NÃO for celular. No celular o pointerlockchange nunca dispara ou dispara errado.
+            if (!isMobile()) {
                 gameState = "MENU";
                 mainMenu.style.display = 'flex';
                 uiGame.style.display = 'none';
@@ -177,7 +186,7 @@ function init() {
             touchStartY = e.touches[0].pageY;
             isTwoFingerTouch = false;
         } else if (e.touches.length === 2) {
-            isTwoFingerTouch = true; // Dois dedos para andar
+            isTwoFingerTouch = true; 
         }
     }, {passive: false});
 
@@ -187,11 +196,11 @@ function init() {
 
     canvas.addEventListener('touchmove', (e) => {
         if (gameState === "PLAYING" && e.touches.length === 1) {
-            e.preventDefault(); // Não rolar a tela
+            e.preventDefault(); 
             const dx = e.touches[0].pageX - touchStartX;
             const dy = e.touches[0].pageY - touchStartY;
             
-            // Sensibilidade do toque
+            // Sensibilidade
             yaw += dx * 0.3;
             pitch -= dy * 0.3;
             
@@ -208,7 +217,7 @@ function init() {
 
     cullFaceCheckbox = document.getElementById('cullFace');
 
-    // Shaders
+    // Compilação Shaders
     program = createProgram(gl, createShader(gl, gl.VERTEX_SHADER, vsSource), createShader(gl, gl.FRAGMENT_SHADER, fsSource));
     skyboxProgram = createProgram(gl, createShader(gl, gl.VERTEX_SHADER, skyboxVsSource), createShader(gl, gl.FRAGMENT_SHADER, skyboxFsSource));
     waterProgram = createProgram(gl, createShader(gl, gl.VERTEX_SHADER, waterVsSource), createShader(gl, gl.FRAGMENT_SHADER, waterFsSource));
@@ -240,11 +249,6 @@ function init() {
     requestAnimationFrame(render);
 }
 
-// Helper simples para saber se é mobile (evita pausar o jogo sozinho)
-function isMobile() {
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
-
 // --- UPDATE FISICO ---
 function updateCamera() {
     const speed = 0.05;
@@ -259,7 +263,7 @@ function updateCamera() {
     
     let newPos = vec3.clone(cameraPos);
     
-    // Movimento Teclado (WASD) OU Toque Duplo (Celular)
+    // Movimento
     if (keys['KeyW'] || isTwoFingerTouch) vec3.scaleAndAdd(newPos, newPos, moveFront, speed);
     if (keys['KeyS']) vec3.scaleAndAdd(newPos, newPos, moveFront, -speed);
     if (keys['KeyA']) vec3.scaleAndAdd(newPos, newPos, moveRight, -speed);
@@ -310,7 +314,7 @@ function render(time) {
     mat4.perspective(projectionMatrix, glMatrixUtils.toRadian(gameState === "PLAYING" ? 75 : 60), canvas.width / canvas.height, 0.1, 1000.0);
     const target = vec3.create(); vec3.add(target, cameraPos, cameraFront); mat4.lookAt(viewMatrix, cameraPos, target, cameraUp);
 
-    // --- DESENHO DA CENA ---
+    // --- RENDERIZAÇÃO ---
     gl.useProgram(program);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, "u_projection"), false, projectionMatrix);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, "u_view"), false, viewMatrix);
@@ -350,14 +354,12 @@ function render(time) {
     gl.uniform1i(gl.getUniformLocation(program, "u_useTexture"), false);
     gl.uniform1i(gl.getUniformLocation(program, "u_useReflection"), true);
     gl.uniform1f(gl.getUniformLocation(program, "u_reflectivity"), 0.3);
-    
     mat4.identity(modelMatrix); mat4.translate(modelMatrix, modelMatrix, [-1.5, 0.25, -3.0]); mat4.rotateY(modelMatrix, modelMatrix, time * 1.0); mat4.scale(modelMatrix, modelMatrix, [0.5, 0.5, 0.5]);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, "u_model"), false, modelMatrix); gl.drawArrays(gl.TRIANGLES, 0, 36);
-    
     mat4.identity(modelMatrix); mat4.translate(modelMatrix, modelMatrix, [1.5, 0.25, 3.0]); mat4.rotateY(modelMatrix, modelMatrix, time * 1.0); mat4.scale(modelMatrix, modelMatrix, [0.5, 0.5, 0.5]);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, "u_model"), false, modelMatrix); gl.drawArrays(gl.TRIANGLES, 0, 36);
 
-    // Tocha
+    // Tocha (Somente Jogando)
     if (gameState === "PLAYING") {
         gl.uniform3fv(gl.getUniformLocation(program, "u_objectColor"), [0.4, 0.2, 0.1]); 
         gl.uniform1i(gl.getUniformLocation(program, "u_useTexture"), false);
@@ -427,7 +429,6 @@ function render(time) {
     const sunPosFake = vec3.create(); vec3.scale(sunPosFake, sunDir, 100.0);
     gl.uniform3fv(gl.getUniformLocation(waterProgram, "u_lightPos"), sunPosFake);
 
-    // Água
     gl.bindVertexArray(waterVAO);
     gl.uniform1f(gl.getUniformLocation(waterProgram, "u_time"), time); 
     gl.uniform1f(gl.getUniformLocation(waterProgram, "u_speedZ"), 3.0); 
@@ -438,7 +439,6 @@ function render(time) {
     gl.uniformMatrix4fv(gl.getUniformLocation(waterProgram, "u_model"), false, modelMatrix);
     gl.drawArrays(gl.TRIANGLES, 0, 300 * 300 * 6);
 
-    // Vela
     gl.disable(gl.CULL_FACE); 
     gl.bindVertexArray(sailClothVAO);
     gl.uniform1f(gl.getUniformLocation(waterProgram, "u_time"), time * 2.0); 
@@ -449,7 +449,6 @@ function render(time) {
     gl.bindTexture(gl.TEXTURE_2D, sailTexture);
     gl.uniform1i(gl.getUniformLocation(waterProgram, "u_texture"), 0);
     gl.uniform1i(gl.getUniformLocation(waterProgram, "u_useTexture"), true);
-
     mat4.identity(modelMatrix); mat4.translate(modelMatrix, modelMatrix, [0.0, 2.5, -0.3]); mat4.rotate(modelMatrix, modelMatrix, glMatrixUtils.toRadian(90), [1, 0, 0]); 
     gl.uniformMatrix4fv(gl.getUniformLocation(waterProgram, "u_model"), false, modelMatrix);
     gl.drawArrays(gl.TRIANGLES, 0, 20 * 20 * 6);
